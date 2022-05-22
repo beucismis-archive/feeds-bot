@@ -1,0 +1,13 @@
+{
+    "bot":{
+        "api_id": "",
+        "api_hash": "",
+        "bot_token": ""
+    },
+    "utils":{
+        "chat_id": -123456789,
+        "check_interval": 10,
+        "max_instances": 3
+    },
+    "feed_urls": []
+}

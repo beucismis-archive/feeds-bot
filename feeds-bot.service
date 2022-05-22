@@ -1,0 +1,17 @@
+[Unit]
+Description = feeds-bot service
+After = network.target
+
+[Service]
+Type = simple
+RestartSec = 5
+Restart = on-failure
+TimeoutStartSec = infinity
+
+User = user
+Group = user
+WorkingDirectory = /home/user/feeds-bot
+ExecStart = /home/user/feeds-bot/feeds-bot.py
+
+[Install]
+WantedBy = multi-user.target
