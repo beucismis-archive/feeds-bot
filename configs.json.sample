@@ -6,8 +6,7 @@
     },
     "utils":{
         "chat_id": -123456789,
-        "check_interval": 10,
-        "max_instances": 3
+        "check_interval": 150
     },
     "feed_urls": []
 }
