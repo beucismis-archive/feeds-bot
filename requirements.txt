@@ -1,4 +1,5 @@
 tgcrypto==1.2.3
 pyrogram==2.0.24
+aiosqlite==0.17.0
 apscheduler==3.9.1
 feedparser==6.0.10
