@@ -7,7 +7,6 @@ from src.main import Bot
 
 if __name__ == "__main__":
     if not os.path.exists("configs.json"):
-        print("Configs file not found!")
-        sys.exit(1)
+        sys.exit("Configs file not found!")
 
     Bot().run()
