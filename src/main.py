@@ -94,9 +94,8 @@ class Bot(Client):
             )
 
         self.scheduler.start()
+        self.logger.info("Scheduler running...")
         await super().start()
-
-        me = await self.get_me()
         self.logger.info(f"Bot running! Pyrogram v{__version__}")
 
     async def stop(self, *args):
