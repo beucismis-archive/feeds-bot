@@ -6,7 +6,8 @@
     },
     "utils":{
         "chat_id": -123456789,
-        "check_interval": 150
+        "check_interval": 5,
+        "misfire_grace_time": 3
     },
     "feed_urls": []
 }
