@@ -1,4 +1,3 @@
-import time
 import json
 import feedparser
 from pyrogram.errors import FloodWait
@@ -12,6 +11,8 @@ class Bot(Client):
         with open("configs.json") as file:
             configs = json.load(file)
 
+        self.logger = get_logger(__name__)
+
         super().__init__(
             name="bot",
             api_id=configs["bot"]["api_id"],
@@ -21,32 +22,43 @@ class Bot(Client):
 
         self.chat_id = configs["utils"]["chat_id"]
         self.check_interval = configs["utils"]["check_interval"]
+        self.misfire_grace_time = configs["utils"]["misfire_grace_time"]
         self.feed_urls = configs["feed_urls"]
 
         self.database = Database()
+
+        self.jobs = []
         self.scheduler = AsyncIOScheduler()
-        self.logger = get_logger(__name__)
 
     async def create_feed_checker(self, feed_url):
         async def check_feed():
+            global link, last_entry
+
             feed = feedparser.parse(feed_url)
             entry = feed.entries[0]
-            link, last_post = await self.database.get(feed_url)
 
-            if entry.link != last_post:
+            try:
+                link, last_entry = await self.database.get(feed_url)
+            except TypeError:
+                last_entry = entry.link
+                self.logger.error(f"Database not unpack...")
+
+            if entry.link != last_entry:
                 try:
                     message = f"{entry.title}\n{entry.link}"
                 except AttributeError:
                     message = f"{entry.link}"
 
                 try:
-                    await self.send_message(self.chat_id, message)
+                    if last_entry != "?":
+                        await self.send_message(self.chat_id, message)
+                        self.logger.info(f"New message: {entry.link}")
+
                     await self.database.update(feed_url, entry.link)
-                    self.logger.info(f"New message: {entry.link}")
 
                 except FloodWait as exception:
-                    self.logger.warning(f"Flood wait: {exception.x} seconds")
-                    time.sleep(exception.x)
+                    self.logger.warning(f"Flood wait: {exception.value} seconds")
+                    await asyncio.sleep(exception.value)
 
                 except Exception as exception:
                     self.logger.error(exception)
@@ -61,11 +73,15 @@ class Bot(Client):
         for feed_url in self.feed_urls:
             data = await self.database.get(feed_url)
 
-            # TODO: Check the same links
+            if data == None or not feed_url in data:
+                feed = feedparser.parse(feed_url)
 
-            if data == None:
-                await self.database.update(feed_url, "*")
-                self.logger.info(f"Added feed: {feed_url}")
+                if len(feed.entries):
+                    await self.database.update(feed_url, "?")
+                    self.logger.info(f"Added feed: {feed_url}")
+                else:
+                    self.feed_urls.remove(feed_url)
+                    self.logger.error(f"Feed invalid: {feed_url}")
 
         for feed_url in self.feed_urls:
             feed_checker = await self.create_feed_checker(feed_url)
@@ -73,16 +89,16 @@ class Bot(Client):
             self.scheduler.add_job(
                 feed_checker,
                 "interval",
-                misfire_grace_time=300,
-                seconds=self.check_interval,
+                minutes=self.check_interval,
+                misfire_grace_time=self.misfire_grace_time * 60,
             )
 
         self.scheduler.start()
         await super().start()
 
         me = await self.get_me()
-        self.logger.info(f"Bot is running! Pyrogram v{__version__}")
+        self.logger.info(f"Bot running! Pyrogram v{__version__}")
 
     async def stop(self, *args):
         await super().stop()
-        self.logger.info("Bot is stopped!")
+        self.logger.info("Bot stopped!")
