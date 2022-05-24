@@ -11,7 +11,7 @@ class Database:
     async def create_table(self):
         async with aiosqlite.connect(self.filename) as db:
             await db.execute(
-                f"CREATE TABLE IF NOT EXISTS {self.table_name} (link TEXT PRIMARY KEY, last_post TEXT)"
+                f"CREATE TABLE IF NOT EXISTS {self.table_name} (link TEXT PRIMARY KEY, last_entry TEXT)"
             )
             await db.commit()
 
@@ -24,11 +24,11 @@ class Database:
 
         return row
 
-    async def update(self, link, last_post):
+    async def update(self, link, last_entry):
         async with aiosqlite.connect(self.filename) as db:
             await db.execute(
-                f"INSERT OR REPLACE INTO {self.table_name} (link, last_post) VALUES (?, ?)",
-                (link, last_post),
+                f"INSERT OR REPLACE INTO {self.table_name} (link, last_entry) VALUES (?, ?)",
+                (link, last_entry),
             )
             await db.commit()
 
